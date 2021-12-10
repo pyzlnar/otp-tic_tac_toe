@@ -49,20 +49,20 @@ defmodule TicTacToe.Game do
   def update_winner(%__MODULE__{state: :finished} = game), do: %{game|winner: game.player}
   def update_winner(%__MODULE__{} = game),                 do: game
 
-  def update_next_player(%__MODULE__{state: :finished}), do: game
-  def update_next_player(%__MODULE__{player: 1} = game), do: %{game|player: 2}
-  def update_next_player(%__MODULE__{player: 2} = game), do: %{game|player: 1}
+  def update_next_player(%__MODULE__{player: 1, state: :progress} = game), do: %{game|player: 2}
+  def update_next_player(%__MODULE__{player: 2, state: :progress} = game), do: %{game|player: 1}
+  def update_next_player(%__MODULE__{} = game),                            do: game
 
   def board_finished?(%__MODULE__{board: board}) do
     @wins
     |> Enum.any?(fn line ->
-      count = line
-        |> Enum.frequencies_by(&board[&1])
-        |> Map.delete(nil)
-        |> Map.values
-        |> Enum.max(fn -> 0 end)
-
-      count == 3
+      line
+      |> Enum.frequencies_by(&board[&1])
+      |> Enum.any?(fn
+        {nil, _} -> false
+        {_, 3}   -> true
+        {_, _}   -> false
+      end)
     end)
   end
 end
