@@ -1,18 +1,17 @@
 defmodule TicTacToe do
-  @moduledoc """
-  Documentation for `TicTacToe`.
-  """
+  alias TicTacToe.{Game, Session}
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> TicTacToe.hello()
-      :world
-
-  """
-  def hello do
-    :world
+  def new_game(session \\ make_ref()) do
+    with {:ok, _} <- Session.new_game(session),
+         do: session
   end
+
+  def play(session, move) do
+    with %Game{} = game <- Session.play(session, move),
+         response       <- game_to_response(game),
+         do: response
+  end
+
+  defp game_to_response(%Game{state: :finished} = game), do: {:finished, game}
+  defp game_to_response(%Game{} = game),                 do: {:ok, game}
 end

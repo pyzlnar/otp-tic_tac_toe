@@ -27,8 +27,12 @@ defmodule TicTacToe.Session do
     )
   end
 
-  def move(session, move) do
-    call(via(session), {:move, move})
+  def board(session) do
+    call(via(session), :board)
+  end
+
+  def play(session, move) do
+    call(via(session), {:play, move})
   end
 
   defp via(session) do
@@ -45,13 +49,17 @@ defmodule TicTacToe.Session do
     {:ok, game}
   end
 
-  def handle_call({:move, move}, _from, game) do
+  def handle_call(:board, _from, game) do
+    {:reply, Game.board_to_string(game), game}
+  end
+
+  def handle_call({:play, move}, _from, game) do
     game = game |> Game.play(move)
     case game.state do
       :finished ->
         {:stop, :normal, game, nil}
       _ ->
-        {:reply, game.board, game}
+        {:reply, game, game}
     end
   end
 end

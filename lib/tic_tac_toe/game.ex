@@ -65,4 +65,19 @@ defmodule TicTacToe.Game do
       end)
     end)
   end
+
+  def board_to_string(%__MODULE__{board: board}) do
+    for x <- 0..2, y <- 0..2, into: "" do
+      separator = if y == 2, do: "\n", else: "|"
+      move =
+        board[{x,y}]
+        |> move_to_string
+
+      move <> separator
+    end
+  end
+
+  defp move_to_string(1), do: "0"
+  defp move_to_string(2), do: "X"
+  defp move_to_string(_), do: "_"
 end
