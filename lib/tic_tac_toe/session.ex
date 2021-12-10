@@ -4,13 +4,39 @@ defmodule TicTacToe.Session do
 
   alias TicTacToe.Game
 
+  # --- Startup --- #
+
+  def child_spec(session) do
+    %{
+      id:      {__MODULE__, session},
+      start:   {__MODULE__, :start_link, [session]},
+      restart: :temporary
+    }
+  end
+
+  def start_link(session) do
+    GenServer.start_link(__MODULE__, Game.new, name: via(session))
+  end
+
   # --- API --- #
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, Game.new)
+
+  def new_game(session) do
+    DynamicSupervisor.start_child(
+      TicTacToe.Session.DynamicSupervisor,
+      {__MODULE__, session}
+    )
   end
 
   def move(session, move) do
-    call(session, {:move, move})
+    call(via(session), {:move, move})
+  end
+
+  defp via(session) do
+    {
+      :via,
+      Registry,
+      {TicTacToe.Session.Registry, session}
+    }
   end
 
   # --- Server --- #

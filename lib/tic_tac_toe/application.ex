@@ -8,8 +8,8 @@ defmodule TicTacToe.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: TicTacToe.Worker.start_link(arg)
-      # {TicTacToe.Worker, arg}
+      {Registry, name: TicTacToe.Session.Registry, keys: :unique},
+      {DynamicSupervisor, name: TicTacToe.Session.DynamicSupervisor, strategy: :one_for_one}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
