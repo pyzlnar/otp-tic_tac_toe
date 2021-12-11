@@ -31,29 +31,26 @@ defmodule TicTacToe.Game do
     game
     |> update_board(move)
     |> update_state
-    |> update_winner
-    |> update_next_player
   end
 
   def update_board(game, {_,_} = move) do
     update_in(game.board[move], fn _ -> game.player end)
   end
 
-  def update_state(%__MODULE__{state: :initial} = game), do: %{game|state: :progress}
-  def update_state(%__MODULE__{state: :progress} = game) do
-    if board_finished?(game),
-      do:   %{game|state: :finished},
-      else: game
+  def update_state(%__MODULE__{} = game) do
+    cond do
+      game.state == :initial ->
+        %{game|state: :progress} |> update_next_player
+      board_has_winner?(game) ->
+        %{game|state: :finished, winner: game.player}
+      board_full?(game) ->
+        %{game|state: :finished}
+      true ->
+        game |> update_next_player
+    end
   end
 
-  def update_winner(%__MODULE__{state: :finished} = game), do: %{game|winner: game.player}
-  def update_winner(%__MODULE__{} = game),                 do: game
-
-  def update_next_player(%__MODULE__{player: 1, state: :progress} = game), do: %{game|player: 2}
-  def update_next_player(%__MODULE__{player: 2, state: :progress} = game), do: %{game|player: 1}
-  def update_next_player(%__MODULE__{} = game),                            do: game
-
-  def board_finished?(%__MODULE__{board: board}) do
+  def board_has_winner?(%__MODULE__{board: board}) do
     @wins
     |> Enum.any?(fn line ->
       line
@@ -65,6 +62,14 @@ defmodule TicTacToe.Game do
       end)
     end)
   end
+
+  def board_full?(%__MODULE__{board: board}) do
+    Enum.all?(board, fn {_coord, val} -> val end)
+  end
+
+  def update_next_player(%__MODULE__{player: 1} = game), do: %{game|player: 2}
+  def update_next_player(%__MODULE__{player: 2} = game), do: %{game|player: 1}
+
 
   def board_to_string(%__MODULE__{board: board}) do
     for x <- 0..2, y <- 0..2, into: "" do

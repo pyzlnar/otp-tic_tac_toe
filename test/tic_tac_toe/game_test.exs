@@ -2,11 +2,12 @@ defmodule TicTacToe.GameTest do
   use ExUnit.Case, async: true
   import TicTacToe.Game
 
-  setup ~W[
+  setup_all ~W[
     setup_new_game
     setup_finished_board
-    setup_finished_game
+    setup_stalemate_board
     setup_almost_done_game
+    setup_finished_game
   ]a
 
   describe "new/0" do
@@ -61,58 +62,66 @@ defmodule TicTacToe.GameTest do
   end
 
   describe "update_state/1" do
-    test "changes the state to :progress if it's in :initial",  %{new: game} do
+    test "updates fields when state is :initial",  %{new: game} do
       game = game |> update_state
-      assert game.state == :progress
+      assert game.state  == :progress
+      assert game.player == 2
     end
 
-    test "changes the state to :finished if it has finished", %{finished_board: game} do
+    test "updates fields when mid game move is done", %{almost_done: game} do
       game = game |> update_state
-      assert game.state == :finished
-    end
-  end
-
-  describe "update_winner/1" do
-    test "updates winner with the current player if state is :finished", %{finished_game: game} do
-      game = game |> update_winner
-      assert game.winner == game.player
+      assert game.state  == :progress
+      assert game.player == 2
+      assert is_nil(game.winner)
     end
 
-    test "does nothing if the state is not :finished", %{finished_board: game} do
-      game = game |> update_winner
-      assert game.winner == nil
+    test "updates fields when board has a winner", %{finished_board: game} do
+      game = game |> update_state
+      assert game.state  == :finished
+      assert game.player == 1
+      assert game.winner == 1
+    end
+
+    test "updates fields when board has no moves", %{stalemate_board: game} do
+      game = game |> update_state
+      assert game.state  == :finished
+      assert game.player == 1
+      assert is_nil(game.winner)
     end
   end
 
   describe "update_next_player/1" do
-    test "switches player if state is :progress", %{new: game} do
-      game = %{game|state: :progress, player: 1}
+    test "switches to the next player", %{new: game} do
+      game = %{game|player: 1}
       game = game |> update_next_player
       assert game.player == 2
 
-      game = %{game|state: :progress, player: 2}
-      game = game |> update_next_player
-      assert game.player == 1
-    end
-
-    test "does nothing is state is not progress", %{new: game} do
-      game = %{game|state: :initial, player: 1}
-      game = game |> update_next_player
-      assert game.player == 1
-
-      game = %{game|state: :finished, player: 1}
+      game = %{game|player: 2}
       game = game |> update_next_player
       assert game.player == 1
     end
   end
 
-  describe "board_finished?/1" do
+  describe "board_has_winner?/1" do
     test "it returns true if the board is finished", %{finished_game: game} do
-      assert board_finished?(game)
+      assert board_has_winner?(game)
     end
 
     test "it returns false if the board is finished", %{new: game} do
-      refute board_finished?(game)
+      refute board_has_winner?(game)
+    end
+  end
+
+  describe "board_full?/1" do
+    test "returns true if the board has no available moves", %{stalemate_board: game} do
+      assert board_full?(game)
+    end
+
+    test "returns false if the board still has moves",
+    %{new: new_game, almost_done: almost_done_game}
+    do
+      refute board_full?(new_game)
+      refute board_full?(almost_done_game)
     end
   end
 
@@ -146,5 +155,15 @@ defmodule TicTacToe.GameTest do
     }
     almost_done = %{context[:new]|board: board, state: :progress}
     put_in(context[:almost_done], almost_done)
+  end
+
+  def setup_stalemate_board(context) do
+    board = %{
+      {0,0} => 1, {0,1} => 2, {0,2} => 1,
+      {1,0} => 1, {1,1} => 2, {1,2} => 2,
+      {2,0} => 2, {2,1} => 1, {2,2} => 2
+    }
+    stalemate_board = %{context[:new]|board: board, state: :progress}
+    put_in(context[:stalemate_board], stalemate_board)
   end
 end
