@@ -48,6 +48,15 @@ defmodule TicTacToeTest do
       assert {:error, :unknown_session} = TicTacToe.play(:dead, {0,0})
     end
 
+    test "returns error if someone tries to play with invalid moves" do
+      game = TicTacToe.new_game
+
+      game |> TicTacToe.play({0,1})
+      result = game |> TicTacToe.play({0,1})
+
+      assert {:error , [move: _]} = result
+    end
+
     test "returns error if trying to start an already existing game" do
       id = make_ref()
       TicTacToe.new_game(id)

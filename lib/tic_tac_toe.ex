@@ -1,5 +1,5 @@
 defmodule TicTacToe do
-  alias TicTacToe.{Game, Session}
+  alias TicTacToe.{Game, Session, Validator}
 
   def new_game(session \\ make_ref()) do
     with {:ok, _} <- Session.new_game(session),
@@ -12,8 +12,10 @@ defmodule TicTacToe do
          do: {:ok, game}
   end
 
-  def play(session, {x,y} = move) when x in 0..2 and y in 0..2 do
+  def play(session, move) do
     with :ok            <- Session.alive?(session),
+         game           <- Session.game(session),
+         :ok            <- Validator.valid_move?(game, move),
          %Game{} = game <- Session.play(session, move),
          response       <- game_to_response(game),
          do: response
