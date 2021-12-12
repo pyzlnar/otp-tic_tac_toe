@@ -43,7 +43,11 @@ defmodule TicTacToeTest do
     end
   end
 
-  describe "other edgecases and errors" do
+  describe "edgecases and errors" do
+    test "returns error if trying to play on non-existing session" do
+      assert {:error, :unknown_session} = TicTacToe.play(:dead, {0,0})
+    end
+
     test "returns error if trying to start an already existing game" do
       id = make_ref()
       TicTacToe.new_game(id)

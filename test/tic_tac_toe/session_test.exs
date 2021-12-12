@@ -10,6 +10,40 @@ defmodule TicTacToe.SessionTest do
 
       Process.exit(pid, :kill)
     end
+
+    test "returns an error if the process already started" do
+      {:ok, pid} = Session.new_game(:test_game)
+
+      assert {:error, {:already_started, npid}} = Session.new_game(:test_game)
+      assert pid == npid
+
+      Process.exit(pid, :kill)
+    end
+  end
+
+  describe "alive?/1" do
+    test "returns :ok if a session is still alive" do
+      ref = make_ref()
+      Session.new_game(ref)
+      assert :ok = Session.alive?(ref)
+    end
+
+    test "returns :error if a session process is no longer alive" do
+      assert {:error, :unknown_session} = Session.alive?(:unknown)
+
+      {:ok, pid} = Session.new_game(:will_kill_process)
+      Process.exit(pid, :kill)
+      assert {:error, :unknown_session} = Session.alive?(:will_kill_process)
+    end
+  end
+
+  describe "game/1" do
+    test "returns the game of an existing session" do
+      ref = make_ref()
+      Session.new_game(ref)
+
+      assert %TicTacToe.Game{} = Session.game(ref)
+    end
   end
 
   describe "play/2" do

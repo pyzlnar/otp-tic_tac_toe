@@ -6,8 +6,15 @@ defmodule TicTacToe do
          do: session
   end
 
-  def play(session, move) do
-    with %Game{} = game <- Session.play(session, move),
+  def get_game(session) do
+    with :ok  <- Session.alive?(session),
+         game <- Session.game(session),
+         do: {:ok, game}
+  end
+
+  def play(session, {x,y} = move) when x in 0..2 and y in 0..2 do
+    with :ok            <- Session.alive?(session),
+         %Game{} = game <- Session.play(session, move),
          response       <- game_to_response(game),
          do: response
   end

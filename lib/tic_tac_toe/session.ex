@@ -27,8 +27,15 @@ defmodule TicTacToe.Session do
     )
   end
 
-  def board(session) do
-    call(via(session), :board)
+  def alive?(session) do
+    with [{pid, _}] <- Registry.lookup(TicTacToe.Session.Registry, session),
+         true       <- Process.alive?(pid),
+         do:   :ok,
+         else: (_ -> {:error, :unknown_session})
+  end
+
+  def game(session) do
+    call(via(session), :game)
   end
 
   def play(session, move) do
@@ -49,8 +56,8 @@ defmodule TicTacToe.Session do
     {:ok, game}
   end
 
-  def handle_call(:board, _from, game) do
-    {:reply, Game.board_to_string(game), game}
+  def handle_call(:game, _from, game) do
+    {:reply, game, game}
   end
 
   def handle_call({:play, move}, _from, game) do
